@@ -122,21 +122,22 @@ void resetGame() {
   lid.endAngle = 395;
   score = 0;
   subcriticality = 0;
-  arduboy.invert(true);
+  arduboy.setRGBled(0, 0, 0);
+  //arduboy.invert(true); //invert title screen
 }
 
 void gameloop() {
   switch (screen) {
     case CurrentScreen::Title:
       resetGame();
+      Sprites::drawOverwrite(0, 0, demoncore12864, 0);
       arduboy.setTextWrap(true);
       arduboy.setCursor(0, 0);
-      arduboy.print("Demon Core Girl (The  meme) ((The Game))");
-      arduboy.setCursor(32, 27);
-      arduboy.print("HI : ");
+      arduboy.print("Demon Core");
+      arduboy.print("   HI : ");
       EEPROM.get(EEPROM_STORAGE_SPACE_START, highscore);
       arduboy.print(highscore);
-      arduboy.setCursor(0, 45);
+      arduboy.setCursor(0, 55);
       arduboy.print("</A:Start     B:Help");
       if (arduboy.justPressed(A_BUTTON) || arduboy.justPressed(LEFT_BUTTON)) {
         screen = CurrentScreen::Gameplay;
@@ -147,6 +148,7 @@ void gameloop() {
       break;
 
     case CurrentScreen::Gameplay:
+      arduboy.invert(true);
       handleControls();
       handleBounds();
       handleLED();

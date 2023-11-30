@@ -1,2 +1,3 @@
 # DemonCoreGirl
 An arduboy game made for the 2023 meme jam, it's a direct reference to the demon core memes, but with a fun playable aspect to it! 
+Use the LEFT button to raise and lower a screwdriver to move the lid over the radioactive core. The goal is to get very close to criticality, but not to actually achieve it. When approaching sub-critical conditions the score will be gradually increased, but the closer you get to going critical, the faster those points rack up. Keep an equilibrium/rhythm going in order to get higher scores. Going critical (closing the kid all the way) will end the game, and save your highscore if you beat your old one. 

@@ -14,7 +14,7 @@ void rotateScrewdriver(float angle) {
   screw.handleY = newy + screw.tipY;
 }
 void handleControls() {
-  
+
 
 
   if (arduboy.pressed(LEFT_BUTTON) && lid.startAngle < 235) {
@@ -51,39 +51,39 @@ void handleBounds() {
   }
 }
 void handleLED() {
-  if (subcriticality > 0) {
-    arduboy.setRGBled(0, 0, subcriticality * 3);
+  if (newRads > 0) {
+    arduboy.setRGBled(0, 0, newRads * 3);
   } else {
     arduboy.setRGBled(0, 0, 0);
   }
 }
 void handleScoring() {
   if (lid.startAngle > 180) {
-    if (lid.startAngle > 186 && subcriticality > 0) {
-      subcriticality--;
+    if (lid.startAngle > 186 && newRads > 0) {
+      newRads--;
     }
     if (lid.startAngle < 186 && lid.startAngle > 183) {
-      subcriticality++;
-      score++;
+      newRads++;
+      rads++;
     }
     if (lid.startAngle < 183) {
-      score += 2;
-      subcriticality += 2;
+      rads += 2;
+      newRads += 2;
     }
   }
   if (lid.startAngle == 180) {
-    subcriticality = RAD_MAX;
+    newRads = CRITICALITY;
 
     screen = CurrentScreen::Gameover;
   }
 }
 void testfunction() {
   if (arduboy.pressed(A_BUTTON)) {
-    if (subcriticality < RAD_MAX) {
-      subcriticality++;
+    if (newRads < CRITICALITY) {
+      newRads++;
     }
   } else {
-    subcriticality = 0;
+    newRads = 0;
   }
 }
 void drawFilledSector(int x, int y, int r, int startAngle, int endAngle) {
@@ -95,16 +95,16 @@ void drawFilledSector(int x, int y, int r, int startAngle, int endAngle) {
   }
 }
 void handleGraphics() {
-
+  arduboy.drawRect(45, 20, levels, 5);
   Sprites::drawOverwrite(7, 0, animegirltop, 0);
   Sprites::drawOverwrite(0, 32, animegirlbttm, 0);
   drawFilledSector(lid.centerX, lid.centerY, lid.radius, lid.startAngle, lid.endAngle);
   arduboy.drawRoundRect(42, 55, 76, 15, 3);  //bottom
   arduboy.drawLine(screw.tipX, screw.tipY, screw.handleX, screw.handleY);
   //arduboy.println(lid.startAngle);
-  arduboy.setCursor(60, 0);
-  arduboy.print("score : ");
-  arduboy.print(score);
+  arduboy.setCursor(45, 10);
+  arduboy.print("RADs : ");
+  arduboy.print(rads);
   if (screen == CurrentScreen::Gameover) {
     arduboy.setCursor(10, 25);
     arduboy.print("!!!CORE CRITICAL!!!");
@@ -120,21 +120,49 @@ void resetGame() {
   lid.radius = 25;
   lid.startAngle = 215;
   lid.endAngle = 395;
-  score = 0;
-  subcriticality = 0;
+  rads = 0;
+  newRads = 0;
+  levels = 0;
   arduboy.setRGBled(0, 0, 0);
   //arduboy.invert(true); //invert title screen
 }
 
+void geigerCounter() {
+  if (newRads > 0) {
+    if (newRads != lastSub) {
+      geiger.tone(newRads / tick, 1);
+      if (newRads > lastSub) {
+        levels++;
+      } else {
+        if (levels>1){
+        levels--;
+      }}
+    } else {
+      geiger.noTone();
+    }
+    lastSub = newRads;
+  }
+  if (levels >= WIDTH - 45) {
+    levels = 1;
+  }
+}
+
+
+void geiger2() {
+  geiger.tone(tick, 10);
+}
 void gameloop() {
   switch (screen) {
     case CurrentScreen::Title:
       resetGame();
-      Sprites::drawOverwrite(0, 0, demoncore12864, 0);
+      Sprites::drawOverwrite(50, 15, radiation3232, 0);
+      Sprites::drawOverwrite(90, 16, halfsphere, 0);
+      Sprites::drawOverwrite(15, 0, halfsphereleft, 0);
       arduboy.setTextWrap(true);
-      arduboy.setCursor(0, 0);
-      arduboy.print("Demon Core");
-      arduboy.print("   HI : ");
+      arduboy.setCursor(36, 47);
+      arduboy.println("Demon Core");
+      arduboy.setCursor(25, 0);
+      arduboy.print("HI-SCORE : ");
       EEPROM.get(EEPROM_STORAGE_SPACE_START, highscore);
       arduboy.print(highscore);
       arduboy.setCursor(0, 55);
@@ -152,19 +180,25 @@ void gameloop() {
       handleControls();
       handleBounds();
       handleLED();
+      geigerCounter();
       handleScoring();
       handleGraphics();
       break;
 
     case CurrentScreen::Gameover:
-      if (score > highscore) {
-        highscore = score;
+      if (rads > highscore) {
+        highscore = rads;
         EEPROM.put(EEPROM_STORAGE_SPACE_START, highscore);
       }
       handleGraphics();
       handleLED();
       if (lid.radius < 150) {
         lid.radius++;
+        if (lid.radius < 64) {
+          geiger2();
+        }
+      } else {
+        geiger.noTone();
       }
       if (lid.startAngle > 160) {
         lid.startAngle--;
@@ -172,9 +206,10 @@ void gameloop() {
       if (lid.endAngle < 380) {
         lid.endAngle++;
       }
-      if (arduboy.justPressed(A_BUTTON)) {
+      if (arduboy.justPressed(A_BUTTON) || arduboy.justPressed(RIGHT_BUTTON)) {
         screen = CurrentScreen::Title;
       }
+
       break;
 
     case CurrentScreen::Instructions:

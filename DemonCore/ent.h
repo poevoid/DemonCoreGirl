@@ -1,8 +1,6 @@
 #pragma once
 #include "arrays.h"
-#define RAD_MAX 255
-
-unsigned char subcriticality = 0;
+#define CRITICALITY 255
 
 struct Lid {
   int centerX = 80;
@@ -30,8 +28,12 @@ CurrentScreen screen = {CurrentScreen::Title};
 
 float clockwise = 0.055;
 float counter = -0.02525;
+float tick = geiger.freq(24.5);
+int levels= 2;
+unsigned char newRads = 0; //dangerscore
+unsigned char lastSub =0; //for geiger counter
 
-int score = 0;
+int rads = 0; //score
 int highscore =0;
 
 Lid lid;
